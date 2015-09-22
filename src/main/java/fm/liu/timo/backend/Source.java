@@ -81,7 +81,8 @@ public class Source {
     public MySQLConnection newConnection(final BackendConnectHandler handler) {
         int size = getSize();
         if (size > config.getMaxCon()) {
-
+            String error = "pool is full! current size:" + size + " on " + config;
+            handler.error(error, null);
         }
         MySQLConnection c = null;
         handler.setDB(config.getDB());
@@ -137,12 +138,19 @@ public class Source {
         return con;
     }
 
+    /**
+     * 获取可用连接，不受连接池容量限制
+     */
     public BackendConnection notNullGet() {
         BackendConnection con = idle.poll();
         if (con == null) {
             BackendCreateConnectionHandler handler = new BackendCreateConnectionHandler();
             handler.setDB(config.getDB());
-            con = this.newConnection(handler);
+            try {
+                con = factory.newMySQLConnection(handler, config, this);
+            } catch (IOException e) {
+                handler.error("create connection exception:" + e.getMessage(), null);
+            }
         }
         con.setState(State.borrowed);
         return con;
