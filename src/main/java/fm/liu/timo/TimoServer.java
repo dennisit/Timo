@@ -150,23 +150,26 @@ public class TimoServer {
                 System.exit(-1);
             }
         }
-
-        starter = new User() {
-            @Override
-            public void receive(Mail<?> mail) {
-                try {
-                    xaLogs.forEach(log -> log.delete());
-                    TimoServer.getInstance().lisen(system);
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (config.getSystem().isEnableXA()) {
+            starter = new User() {
+                @Override
+                public void receive(Mail<?> mail) {
+                    try {
+                        xaLogs.forEach(log -> log.delete());
+                        TimoServer.getInstance().lisen(system);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        };
-        starter.register();
+            };
+            starter.register();
 
-        // XA恢复
-        Logger.info("Checking XA transaction recover ...");
-        xaRecover(nodes);
+            // XA恢复
+            Logger.info("Checking XA transaction recover ...");
+            xaRecover(nodes);
+        } else {
+            lisen(system);
+        }
     }
 
     private void xaRecover(Map<Integer, Node> nodes) {

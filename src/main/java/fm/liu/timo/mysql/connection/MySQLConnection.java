@@ -295,9 +295,7 @@ public class MySQLConnection extends BackendConnection {
         datasource.remove(this);
         processor.remove(this);
         super.cleanup();// 立即关闭物理socket
-        if (Logger.isDebugEnabled()) {
-            Logger.debug("connection {} closed due to {}", this, reason);
-        }
+        Logger.debug("connection {} closed due to {}", this, reason);
     }
 
     @Override

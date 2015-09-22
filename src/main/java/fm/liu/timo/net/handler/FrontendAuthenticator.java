@@ -140,9 +140,7 @@ public class FrontendAuthenticator implements NIOHandler {
         source.setDB(auth.database);
         source.getVariables().setCharsetIndex(auth.charsetIndex);
         source.setHandler(new FrontendCommandHandler(source));
-        if (Logger.isDebugEnabled()) {
-            Logger.debug("Login success for {}/{}", source, auth.user);
-        }
+        Logger.debug("Login success for {}/{}", source, auth.user);
         ByteBuffer buffer = source.allocate();
         source.write(source.writeToBuffer(AUTH_OK, buffer));
     }

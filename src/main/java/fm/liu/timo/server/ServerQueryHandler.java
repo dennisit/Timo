@@ -44,9 +44,7 @@ public class ServerQueryHandler implements FrontendQueryHandler {
     @Override
     public void query(String sql) {
         ServerConnection c = this.source;
-        if (Logger.isDebugEnabled()) {
-            Logger.debug("SQL:'{}' from {}", sql, c);
-        }
+        Logger.debug("SQL:'{}' from {}", sql, c);
         int rs = ServerParse.parse(sql);
         switch (rs & 0xff) {
             case ServerParse.EXPLAIN:

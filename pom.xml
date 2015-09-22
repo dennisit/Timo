@@ -33,13 +33,6 @@ limitations under the License.
         <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
         <buildNumber>${maven.build.timestamp}</buildNumber>
     </properties>
-    <repositories>
-        <repository>
-            <id>liuhuanting-maven-snapshot-repository</id>
-            <name>liuhuanting-maven-snapshot-repository</name>
-            <url>https://raw.github.com/liuhuanting/maven/snapshot/</url>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>mysql</groupId>
@@ -47,9 +40,9 @@ limitations under the License.
             <version>5.1.27</version>
         </dependency>
         <dependency>
+            <groupId>org.tinylog</groupId>
             <artifactId>tinylog</artifactId>
-            <groupId>com.github.liuhuanting</groupId>
-            <version>2.0.0</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>fm.liu</groupId>
