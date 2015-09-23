@@ -116,7 +116,11 @@ public class FieldPacket extends ResultSetPacket {
         buffer.put((byte) (type & 0xff));
         BufferUtil.writeUB2(buffer, flags);
         buffer.put(decimals);
-        buffer.position(buffer.position() + FILLER.length);
+        // buffer.position(buffer.position() + FILLER.length);
+        // 改为强制填充0x00
+        // 由于buffer是从bufferpool中取的，会残留之前的数据，因此这两个字节就会不为0，mysql客户端和mysl-jdbc驱动是没有问题的，但是有些客户端（js客户端）会强制校验这两位，报错。 by 执笔相思
+        buffer.put((byte) 0x00);
+        buffer.put((byte) 0x00);
         if (definition != null) {
             BufferUtil.writeWithLength(buffer, definition);
         }
