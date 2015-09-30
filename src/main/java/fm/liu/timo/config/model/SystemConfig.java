@@ -77,7 +77,7 @@ public class SystemConfig {
         this.heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
         this.queryTimeout = DEFAULT_QUERY_TIMEOUT;
         this.sqlRecordCount = DEFAULT_SQL_RECORD_COUNT;
-        this.setEnableXA(DEFAULT_ENABLE_XA);
+        this.enableXA = DEFAULT_ENABLE_XA;
     }
 
     public String getCharset() {

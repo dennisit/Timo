@@ -54,7 +54,7 @@ public class XARollbackHandler extends XAHandler {
             }
         }
         XARollbackHandler handler = new XARollbackHandler(session, cons, true);
-        connections.forEach(con -> con.query("XA ROLLBACK " + session.getXID(), handler));
+        cons.forEach(con -> con.query("XA ROLLBACK " + session.getXID(), handler));
         recycleResources();
 
     }

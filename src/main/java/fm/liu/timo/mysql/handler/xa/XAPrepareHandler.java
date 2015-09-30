@@ -54,8 +54,11 @@ public class XAPrepareHandler extends XAHandler {
 
     private void error() {
         Collection<BackendConnection> connections = new HashSet<>();
-        results.entrySet().stream().filter(entry -> entry.getValue())
-                .forEach(i -> connections.add(cons.get(i)));
+        results.entrySet().stream().filter(entry -> entry.getValue()).forEach(i -> {
+            if (!cons.get(i).isClosed()) {
+                connections.add(cons.get(i));
+            }
+        });
         XARollbackHandler handler = new XARollbackHandler(session, connections, false);
         connections.forEach(con -> con.query("XA ROLLBACK " + session.getXID(), handler));
         session.getFront().writeErrMessage(ErrorCode.ER_YES, this.errMsg);

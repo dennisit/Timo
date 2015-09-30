@@ -66,7 +66,9 @@ public class XARecoverHandler extends SessionResultHandler {
     }
 
     @Override
-    public void field(byte[] header, List<byte[]> fields, byte[] eof, BackendConnection con) {}
+    public void field(byte[] header, List<byte[]> fields, byte[] eof, BackendConnection con) {
+        this.recoverCount = new AtomicInteger();
+    }
 
     @Override
     public void row(byte[] row, BackendConnection con) {
@@ -90,7 +92,7 @@ public class XARecoverHandler extends SessionResultHandler {
             if (this.failed()) {
                 error();
             } else {
-                if (this.recoverCount == null) {
+                if (this.recoverCount.get() == 0) {
                     TimoServer.getSender()
                             .send(new Mail<String>(TimoServer.getInstance().getStarter(), "start"));
                 } else {
