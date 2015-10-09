@@ -17,8 +17,12 @@ import fm.liu.timo.server.session.XATransactionSession.XAState;
  * @author liuhuanting
  */
 public class XAPrepareHandler extends XAHandler {
-    public XAPrepareHandler(XATransactionSession session, Collection<BackendConnection> cons) {
+    private boolean restart;
+
+    public XAPrepareHandler(XATransactionSession session, Collection<BackendConnection> cons,
+            boolean restart) {
         super(session, cons);
+        this.restart = restart;
     }
 
     @Override
@@ -31,7 +35,7 @@ public class XAPrepareHandler extends XAHandler {
             }
             session.setState(XAState.PREPARED);
             log();
-            session.xaCommit();
+            session.xaCommit(restart);
         }
 
     }

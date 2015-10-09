@@ -200,7 +200,7 @@ public class ServerConnection extends FrontendConnection {
         Session tmp = session;
         variables.setAutocommit(autocommit);
         if (autocommit) {
-            tmp.commit();
+            tmp.commit(false);
         } else {
             if (!(tmp instanceof TransactionSession)) {
                 session = transactionSession;
@@ -212,12 +212,7 @@ public class ServerConnection extends FrontendConnection {
     public void startTransaction() {
         if (session instanceof TransactionSession && !session.getConnections().isEmpty()) {
             nextSession = transactionSession;
-            if (session instanceof XATransactionSession) {
-                ((XATransactionSession) session).start(checkDB());
-                session.commit();
-            } else {
-                session.commit();
-            }
+            session.commit(session instanceof XATransactionSession);
         } else {
             session = transactionSession;
             if (session instanceof XATransactionSession) {
@@ -229,7 +224,7 @@ public class ServerConnection extends FrontendConnection {
     }
 
     public void commit() {
-        session.commit();
+        session.commit(false);
     }
 
     public void rollback() {

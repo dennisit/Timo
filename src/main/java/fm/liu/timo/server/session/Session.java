@@ -40,7 +40,7 @@ public interface Session {
 
     void release(BackendConnection con);
 
-    void commit();
+    void commit(boolean restart);
 
     void rollback(boolean response);
 

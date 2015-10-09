@@ -58,9 +58,9 @@ public class TransactionSession extends AbstractSession {
     }
 
     @Override
-    public void commit() {
+    public void commit(boolean restart) {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(restart);
             return;
         }
         Collection<BackendConnection> cons = availableConnections();

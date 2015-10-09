@@ -105,12 +105,14 @@ public abstract class AbstractSession implements Session {
         return new MultiNodeHandler(this, new Merger(outs), size);
     }
 
-    public void commit() {
+    @Override
+    public void commit(boolean restart) {
         ByteBuffer buffer = front.allocate();
         buffer = front.writeToBuffer(OkPacket.OK, buffer);
         front.write(buffer);
     }
 
+    @Override
     public void rollback(boolean response) {
         ByteBuffer buffer = front.allocate();
         buffer = front.writeToBuffer(OkPacket.OK, buffer);

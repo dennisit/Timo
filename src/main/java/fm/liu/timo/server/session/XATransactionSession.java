@@ -22,9 +22,10 @@ import fm.liu.timo.server.session.handler.ResultHandler;
  * @author liuhuanting
  */
 public class XATransactionSession extends TransactionSession {
-    private String  XID;
-    private XAState state;
-    private File    prepareLog;
+    private String   XID;
+    private XAState  state;
+    private File     prepareLog;
+    private Database database;
 
     public enum XAState {
         ACTIVE, IDLE, PREPARED, FINISHED
@@ -36,6 +37,7 @@ public class XATransactionSession extends TransactionSession {
     }
 
     public void start(Database database) {
+        this.setDatabase(database);
         this.XID = TimoServer.getInstance().nextXID();
         Map<Integer, Node> nodes = TimoServer.getInstance().getConfig().getNodes();
         ResultHandler handler = new XAStartHandler(this, database.getNodes().size());
@@ -52,37 +54,37 @@ public class XATransactionSession extends TransactionSession {
     }
 
     @Override
-    public void commit() {
+    public void commit(boolean restart) {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(restart);
             return;
         }
         Collection<BackendConnection> cons = availableConnections();
         if (cons.size() == getConnections().size()) {
-            ResultHandler handler = new XAEndHandler(this, cons, true);
+            ResultHandler handler = new XAEndHandler(this, cons, true, restart);
             cons.forEach(con -> con.query("XA END " + XID, handler));
         } else {
             onError();
         }
     }
 
-    public void xaPrepare() {
+    public void xaPrepare(boolean restart) {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(restart);
             return;
         }
         Collection<BackendConnection> cons = availableConnections();
         if (cons.size() == getConnections().size()) {
-            ResultHandler handler = new XAPrepareHandler(this, cons);
+            ResultHandler handler = new XAPrepareHandler(this, cons, restart);
             cons.forEach(con -> con.query("XA PREPARE " + XID, handler));
         } else {
             onError();
         }
     }
 
-    public void xaCommit() {
+    public void xaCommit(boolean restart) {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(restart);
             return;
         }
         while (TimoServer.getInstance().isXAStarting()) {
@@ -95,7 +97,7 @@ public class XATransactionSession extends TransactionSession {
         TimoServer.getInstance().setXACommiting(true);
         Collection<BackendConnection> cons = availableConnections();
         if (cons.size() == getConnections().size()) {
-            ResultHandler handler = new XACommitHandler(this, cons);
+            ResultHandler handler = new XACommitHandler(this, cons, restart);
             cons.forEach(con -> con.query("XA COMMIT " + XID, handler));
         } else {
             onError();
@@ -104,12 +106,12 @@ public class XATransactionSession extends TransactionSession {
 
     private void rollback() {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(false);
             return;
         }
         Collection<BackendConnection> cons = availableConnections();
         if (cons.size() == getConnections().size()) {
-            ResultHandler handler = new XAEndHandler(this, cons, false);
+            ResultHandler handler = new XAEndHandler(this, cons, false, false);
             cons.forEach(con -> con.query("XA END " + XID, handler));
         } else {
             onError();
@@ -118,7 +120,7 @@ public class XATransactionSession extends TransactionSession {
 
     public void xaRollback() {
         if (getConnections().isEmpty()) {
-            super.commit();
+            super.commit(false);
             return;
         }
         Collection<BackendConnection> cons = availableConnections();
@@ -186,5 +188,13 @@ public class XATransactionSession extends TransactionSession {
 
     public void setPrepareLog(File file) {
         this.prepareLog = file;
+    }
+
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
     }
 }

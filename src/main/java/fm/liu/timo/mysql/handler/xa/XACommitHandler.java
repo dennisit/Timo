@@ -16,8 +16,12 @@ import fm.liu.timo.server.session.XATransactionSession;
  */
 public class XACommitHandler extends XAHandler {
 
-    public XACommitHandler(XATransactionSession session, Collection<BackendConnection> cons) {
+    private boolean restart;
+
+    public XACommitHandler(XATransactionSession session, Collection<BackendConnection> cons,
+            boolean restart) {
         super(session, cons);
+        this.restart = restart;
     }
 
     @Override
@@ -30,8 +34,12 @@ public class XACommitHandler extends XAHandler {
             }
             TimoServer.getInstance().setXACommiting(false);
             session.release();
-            session.getFront().write(OkPacket.OK);
-            recycleResources();
+            if (restart) {
+                session.start(session.getDatabase());
+            } else {
+                session.getFront().write(OkPacket.OK);
+                recycleResources();
+            }
         }
     }
 
@@ -48,7 +56,7 @@ public class XACommitHandler extends XAHandler {
                 cons.add(con);
             }
         }
-        XACommitHandler handler = new XACommitHandler(session, cons);
+        XACommitHandler handler = new XACommitHandler(session, cons, restart);
         connections.forEach(con -> con.query("XA COMMIT " + session.getXID(), handler));
         recycleResources();
     }

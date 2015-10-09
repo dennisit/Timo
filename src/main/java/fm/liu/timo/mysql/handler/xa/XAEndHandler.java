@@ -14,11 +14,13 @@ import fm.liu.timo.server.session.XATransactionSession.XAState;
 public class XAEndHandler extends XAHandler {
 
     private boolean isCommit;
+    private boolean restart;
 
     public XAEndHandler(XATransactionSession session, Collection<BackendConnection> cons,
-            boolean isCommit) {
+            boolean isCommit, boolean restart) {
         super(session, cons);
         this.isCommit = isCommit;
+        this.restart = restart;
     }
 
     @Override
@@ -30,7 +32,7 @@ public class XAEndHandler extends XAHandler {
             }
             session.setState(XAState.IDLE);
             if (isCommit) {
-                session.xaPrepare();
+                session.xaPrepare(this.restart);
             } else {
                 session.xaRollback();
             }
