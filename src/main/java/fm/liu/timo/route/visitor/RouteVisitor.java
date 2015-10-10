@@ -63,7 +63,7 @@ public class RouteVisitor extends Visitor {
     private Map<String, Integer> orderBy;
     private int                  limitSize   = -1;
     private int                  limitOffset = 0;
-    private int                  batchIndex  = -1;
+    private int                  keyIndex    = -1;
 
     public RouteVisitor(Database database) {
         this.database = database;
@@ -96,10 +96,6 @@ public class RouteVisitor extends Visitor {
 
     public int getLimitOffset() {
         return limitOffset;
-    }
-
-    public int getBatchIndex() {
-        return batchIndex;
     }
 
     private void recordTable(Identifier node) {
@@ -165,16 +161,16 @@ public class RouteVisitor extends Visitor {
         int i = 0;
         for (Identifier column : columns) {
             if (check(column.getIdTextUpUnescape())) {
-                batchIndex = i;
+                keyIndex = i;
                 break;
             }
             i++;
         }
-        for (RowExpression row : rows) {
-            row.accept(this);
-            if (batchIndex != -1) {
-                recordValue(columns.get(batchIndex),
-                        row.getRowExprList().get(batchIndex).evaluation(Collections.emptyMap()));
+        if (keyIndex != -1) {
+            for (RowExpression row : rows) {
+                row.accept(this);
+                recordValue(columns.get(keyIndex),
+                        row.getRowExprList().get(keyIndex).evaluation(Collections.emptyMap()));
             }
         }
         visitChild(node.getSelect());

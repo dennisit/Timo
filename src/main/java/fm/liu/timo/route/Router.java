@@ -104,8 +104,8 @@ public class Router {
             case ServerParse.INSERT:
             case ServerParse.REPLACE:
                 if (TableType.SPLIT.equals(table.getType())) {
-                    return routeBatch(table, (DMLInsertReplaceStatement) stmt,
-                            visitor.getBatchIndex(), type, outlets, values);
+                    return routeBatch(table, (DMLInsertReplaceStatement) stmt, type, outlets,
+                            values);
                 }
                 break;
         }
@@ -129,8 +129,8 @@ public class Router {
      *     INSERT/REPLACE INTO TABLE_A(COL_1,COL2,...) VALUES (VAL_21,VAL22,...),(VAL_41,VAL_42,...)...;
      * </pre>
      */
-    private static Outlets routeBatch(Table table, DMLInsertReplaceStatement stmt, int index,
-            int type, Outlets outlets, ArrayList<Object> values) {
+    private static Outlets routeBatch(Table table, DMLInsertReplaceStatement stmt, int type,
+            Outlets outlets, ArrayList<Object> values) {
         List<RowExpression> rows = stmt.getRowList();
         HashMap<Integer, List<RowExpression>> results = new HashMap<>();
         if (values.isEmpty()) {
