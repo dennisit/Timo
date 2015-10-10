@@ -32,7 +32,7 @@ public class XACommitHandler extends XAHandler {
                 error();
                 return;
             }
-            TimoServer.getInstance().setXACommiting(false);
+            TimoServer.getXaCommiting().get(session.getDatabase().getName()).decrementAndGet();
             session.release();
             if (restart) {
                 session.start(session.getDatabase());

@@ -66,20 +66,22 @@ public class TimoServer {
         return INSTANCE;
     }
 
-    private final AtomicLong       xid = new AtomicLong();
-    private final TimoConfig       config;
-    private final Timer            timer;
-    private final NameableExecutor timerExecutor;
-    private final AtomicBoolean    isOnline;
-    private final long             startupTime;
-    private NIOProcessor[]         processors;
-    private NIOConnector           connector;
-    private NIOAcceptor            manager;
-    private NIOAcceptor            server;
-    private User                   starter;
-    private Set<File>              xaLogs;
-    private volatile boolean       xaCommiting;
-    private volatile boolean       xaStarting;
+    private final AtomicLong                                      xid         = new AtomicLong();
+    private final TimoConfig                                      config;
+    private final Timer                                           timer;
+    private final NameableExecutor                                timerExecutor;
+    private final AtomicBoolean                                   isOnline;
+    private final long                                            startupTime;
+    private NIOProcessor[]                                        processors;
+    private NIOConnector                                          connector;
+    private NIOAcceptor                                           manager;
+    private NIOAcceptor                                           server;
+    private User                                                  starter;
+    private Set<File>                                             xaLogs;
+    private static volatile ConcurrentHashMap<String, AtomicLong> xaCommiting =
+            new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicLong> xaStarting  =
+            new ConcurrentHashMap<>();
 
     private TimoServer() {
         this.config = new TimoConfig();
@@ -167,6 +169,10 @@ public class TimoServer {
             // XA恢复
             Logger.info("Checking XA transaction recover ...");
             xaRecover(nodes);
+            config.getDatabases().values().forEach(db -> {
+                xaStarting.put(db.getName(), new AtomicLong());
+                xaCommiting.put(db.getName(), new AtomicLong());
+            });
         } else {
             lisen(system);
         }
@@ -317,20 +323,12 @@ public class TimoServer {
         }
     }
 
-    public boolean isXACommiting() {
+    public static ConcurrentHashMap<String, AtomicLong> getXaCommiting() {
         return xaCommiting;
     }
 
-    public void setXACommiting(boolean xaCommiting) {
-        this.xaCommiting = xaCommiting;
-    }
-
-    public boolean isXAStarting() {
+    public static ConcurrentHashMap<String, AtomicLong> getXaStarting() {
         return xaStarting;
-    }
-
-    public void setXAStarting(boolean xaStarting) {
-        this.xaStarting = xaStarting;
     }
 
 }

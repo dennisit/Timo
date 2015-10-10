@@ -41,14 +41,15 @@ public class XATransactionSession extends TransactionSession {
         this.XID = TimoServer.getInstance().nextXID();
         Map<Integer, Node> nodes = TimoServer.getInstance().getConfig().getNodes();
         ResultHandler handler = new XAStartHandler(this, database.getNodes().size());
-        while (TimoServer.getInstance().isXACommiting()) {
+        String db = database.getName();
+        while (TimoServer.getXaCommiting().get(db).get() > 0) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        TimoServer.getInstance().setXAStarting(true);
+        TimoServer.getXaStarting().get(db).incrementAndGet();
         database.getNodes()
                 .forEach(id -> nodes.get(id).getSource().query("XA START " + XID, handler));
     }
@@ -87,17 +88,18 @@ public class XATransactionSession extends TransactionSession {
             super.commit(restart);
             return;
         }
-        while (TimoServer.getInstance().isXAStarting()) {
+        String db = database.getName();
+        while (TimoServer.getXaStarting().get(db).get() > 0) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        TimoServer.getInstance().setXACommiting(true);
         Collection<BackendConnection> cons = availableConnections();
         if (cons.size() == getConnections().size()) {
             ResultHandler handler = new XACommitHandler(this, cons, restart);
+            TimoServer.getXaCommiting().get(db).incrementAndGet();
             cons.forEach(con -> con.query("XA COMMIT " + XID, handler));
         } else {
             onError();

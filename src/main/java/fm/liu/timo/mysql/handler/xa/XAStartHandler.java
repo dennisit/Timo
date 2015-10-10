@@ -26,7 +26,7 @@ public class XAStartHandler extends XAHandler {
                 error();
                 return;
             }
-            TimoServer.getInstance().setXAStarting(false);
+            TimoServer.getXaStarting().get(session.getDatabase().getName()).decrementAndGet();
             session.setState(XAState.ACTIVE);
             OkPacket p = new OkPacket();
             p.read(ok);
@@ -37,7 +37,7 @@ public class XAStartHandler extends XAHandler {
 
     private void error() {
         session.clear();
-        TimoServer.getInstance().setXAStarting(false);
+        TimoServer.getXaStarting().get(session.getDatabase().getName()).decrementAndGet();
         session.getFront().writeErrMessage(ErrorCode.ER_YES, this.errMsg);
         recycleResources();
     }
