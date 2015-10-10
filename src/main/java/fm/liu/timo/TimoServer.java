@@ -169,9 +169,9 @@ public class TimoServer {
             // XA恢复
             Logger.info("Checking XA transaction recover ...");
             xaRecover(nodes);
-            config.getDatabases().values().forEach(db -> {
-                xaStarting.put(db.getName(), new AtomicLong());
-                xaCommiting.put(db.getName(), new AtomicLong());
+            config.getDatabases().keySet().forEach(db -> {
+                xaStarting.put(db, new AtomicLong());
+                xaCommiting.put(db, new AtomicLong());
             });
         } else {
             lisen(system);

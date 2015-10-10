@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.pmw.tinylog.Logger;
 import fm.liu.timo.backend.Node;
@@ -116,6 +117,12 @@ public class TimoConfig {
                     throw new Exception(
                             "node " + node.getID() + " init failed in config reloading.");
                 }
+            }
+            if (this.system.isEnableXA()) {
+                databases.keySet().forEach(db -> {
+                    TimoServer.getXaStarting().put(db, new AtomicLong());
+                    TimoServer.getXaCommiting().put(db, new AtomicLong());
+                });
             }
             success = true;
         } catch (Exception e) {
