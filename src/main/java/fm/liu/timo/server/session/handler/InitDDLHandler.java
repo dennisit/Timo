@@ -3,7 +3,6 @@ package fm.liu.timo.server.session.handler;
 import java.util.List;
 import java.util.Map;
 import org.pmw.tinylog.Logger;
-import fm.liu.messenger.Mail;
 import fm.liu.timo.TimoServer;
 import fm.liu.timo.backend.Node;
 import fm.liu.timo.config.model.Table;
@@ -16,6 +15,7 @@ import fm.liu.timo.parser.ast.fragment.ddl.ColumnDefinition;
 import fm.liu.timo.parser.ast.fragment.ddl.datatype.DataType;
 import fm.liu.timo.parser.util.Pair;
 import fm.liu.timo.server.ServerConnection;
+import fm.liu.timo.util.messenger.Mail;
 
 /**
  * @author liuhuanting
@@ -126,7 +126,8 @@ public class InitDDLHandler extends SimpleHandler {
                         .send(new Mail<String>(TimoServer.getInstance().getStarter(), type));
                 break;
             case "RELOAD":
-                //TODO
+                TimoServer.getSender().send(new Mail<Boolean>(
+                        TimoServer.getInstance().getConfig().getReloader(), success));
                 break;
         }
     }

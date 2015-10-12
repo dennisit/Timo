@@ -22,15 +22,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import fm.liu.messenger.Mail;
-import fm.liu.messenger.User;
+import fm.liu.timo.util.messenger.Mail;
+import fm.liu.timo.util.messenger.Messenger;
 
 /**
  * SQL统计排序记录器
  * 
  * @author xianmao.hexm 2010-9-30 上午10:48:28
  */
-public final class SQLRecorder extends User {
+public final class SQLRecorder extends Messenger {
     private volatile ConcurrentHashMap<String, SQLRecord> records;
     private final ReentrantLock                           lock;
 

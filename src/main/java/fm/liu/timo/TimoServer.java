@@ -28,8 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.pmw.tinylog.Logger;
-import fm.liu.messenger.Mail;
-import fm.liu.messenger.User;
 import fm.liu.timo.backend.Node;
 import fm.liu.timo.config.Versions;
 import fm.liu.timo.config.model.SystemConfig;
@@ -49,6 +47,8 @@ import fm.liu.timo.statistic.SQLRecorder;
 import fm.liu.timo.util.ExecutorUtil;
 import fm.liu.timo.util.NameableExecutor;
 import fm.liu.timo.util.TimeUtil;
+import fm.liu.timo.util.messenger.Mail;
+import fm.liu.timo.util.messenger.Messenger;
 
 /**
  * @author xianmao.hexm 2011-4-19 下午02:58:59
@@ -57,7 +57,7 @@ public class TimoServer {
     public static final String       NAME               = "Timo";
     private static final long        TIME_UPDATE_PERIOD = 20L;
     private static final SQLRecorder RECORDER           = new SQLRecorder();
-    private static final User        SENDER             = new User() {
+    private static final Messenger        SENDER             = new Messenger() {
         @Override
         public void receive(Mail<?> mail) {}
     };
@@ -78,7 +78,7 @@ public class TimoServer {
     private NIOConnector                                          connector;
     private NIOAcceptor                                           manager;
     private NIOAcceptor                                           server;
-    private User                                                  starter;
+    private Messenger                                                  starter;
     private Set<File>                                             xaLogs;
     private static volatile ConcurrentHashMap<String, AtomicLong> xaCommiting =
             new ConcurrentHashMap<>();
@@ -96,7 +96,7 @@ public class TimoServer {
         RECORDER.register();
     }
 
-    public static User getSender() {
+    public static Messenger getSender() {
         return SENDER;
     }
 
@@ -104,7 +104,7 @@ public class TimoServer {
         return RECORDER;
     }
 
-    public User getStarter() {
+    public Messenger getStarter() {
         return starter;
     }
 
@@ -156,7 +156,7 @@ public class TimoServer {
         }
         final AtomicInteger count = new AtomicInteger();
         config.getDatabases().values().forEach(db -> count.addAndGet(db.getTables().size()));
-        starter = new User() {
+        starter = new Messenger() {
             @Override
             public void receive(Mail<?> mail) {
                 switch ((String) mail.msg) {

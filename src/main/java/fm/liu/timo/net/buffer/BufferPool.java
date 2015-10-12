@@ -118,7 +118,6 @@ public final class BufferPool {
     }
 
     public int getChunkSize() {
-        // TODO Auto-generated method stub
         return chunkSize;
     }
 

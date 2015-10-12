@@ -39,7 +39,6 @@ public class EchoBioServer implements Runnable {
                 Socket socket = serverSocket.accept();
                 new Thread(new BioConnection(socket)).start();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -72,13 +71,11 @@ public class EchoBioServer implements Runnable {
                     // output.flush();
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 if (socket != null)
                     try {
                         socket.close();
                     } catch (IOException e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
             }

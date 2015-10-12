@@ -14,7 +14,6 @@
 package fm.liu.timo.mysql.handler;
 
 import java.util.List;
-import fm.liu.messenger.Mail;
 import fm.liu.timo.TimoServer;
 import fm.liu.timo.config.model.Datasource;
 import fm.liu.timo.mysql.connection.MySQLConnection;
@@ -27,6 +26,7 @@ import fm.liu.timo.server.session.TransactionSession;
 import fm.liu.timo.server.session.handler.SessionResultHandler;
 import fm.liu.timo.statistic.SQLRecord;
 import fm.liu.timo.util.TimeUtil;
+import fm.liu.timo.util.messenger.Mail;
 
 /**
  * @author Liu Huanting 2015年5月9日

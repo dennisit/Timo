@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import fm.liu.messenger.Mail;
 import fm.liu.timo.TimoServer;
 import fm.liu.timo.config.ErrorCode;
 import fm.liu.timo.config.model.Datasource;
@@ -36,6 +35,7 @@ import fm.liu.timo.server.session.TransactionSession;
 import fm.liu.timo.server.session.handler.SessionResultHandler;
 import fm.liu.timo.statistic.SQLRecord;
 import fm.liu.timo.util.TimeUtil;
+import fm.liu.timo.util.messenger.Mail;
 
 /**
  * @author Liu Huanting 2015年5月9日

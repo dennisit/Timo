@@ -2,13 +2,13 @@ package fm.liu.timo.server.session.handler;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import fm.liu.messenger.Mail;
 import fm.liu.timo.TimoServer;
 import fm.liu.timo.config.model.Table;
 import fm.liu.timo.mysql.packet.OkPacket;
 import fm.liu.timo.mysql.packet.RowDataPacket;
 import fm.liu.timo.net.connection.BackendConnection;
 import fm.liu.timo.server.ServerConnection;
+import fm.liu.timo.util.messenger.Mail;
 
 /**
  * @author liuhuanting
@@ -75,7 +75,8 @@ public class InitAutoIncrementHandler extends SimpleHandler {
                         .send(new Mail<String>(TimoServer.getInstance().getStarter(), type));
                 break;
             case "RELOAD":
-                //TODO
+                TimoServer.getSender().send(new Mail<Boolean>(
+                        TimoServer.getInstance().getConfig().getReloader(), success));
                 break;
         }
     }

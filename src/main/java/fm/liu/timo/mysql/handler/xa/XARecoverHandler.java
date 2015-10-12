@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.pmw.tinylog.Logger;
-import fm.liu.messenger.Mail;
 import fm.liu.timo.TimoServer;
 import fm.liu.timo.backend.Node;
 import fm.liu.timo.mysql.connection.MySQLConnection;
@@ -16,6 +15,7 @@ import fm.liu.timo.mysql.packet.ErrorPacket;
 import fm.liu.timo.mysql.packet.RowDataPacket;
 import fm.liu.timo.net.connection.BackendConnection;
 import fm.liu.timo.server.session.handler.SessionResultHandler;
+import fm.liu.timo.util.messenger.Mail;
 
 /**
  * @author liuhuanting

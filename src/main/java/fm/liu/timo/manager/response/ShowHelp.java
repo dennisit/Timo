@@ -27,7 +27,6 @@ public class ShowHelp extends ShowHandler {
                 "pause heartbeat for a while on the datanode you've chosen");
         helps.put("kill @@connection [connection_id]", "kill the connection you've chosen");
         helps.put("reload @@config", "reload the config online");
-        helps.put("rollback @@config", "rollback the config to the early time");
         helps.put("online", "turn timo-server to online");
         helps.put("offline", "turn timo-server to offline");
         helps.put("handover @@datasource [datanode_id]",

@@ -14,15 +14,17 @@
 package fm.liu.timo;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.pmw.tinylog.Logger;
 import fm.liu.timo.backend.Node;
 import fm.liu.timo.backend.Source;
+import fm.liu.timo.config.ErrorCode;
 import fm.liu.timo.config.loader.ServerConfigLoader;
 import fm.liu.timo.config.loader.SystemConfigLoader;
 import fm.liu.timo.config.model.Database;
@@ -30,20 +32,23 @@ import fm.liu.timo.config.model.Datanode;
 import fm.liu.timo.config.model.Datasource;
 import fm.liu.timo.config.model.SystemConfig;
 import fm.liu.timo.config.model.User;
+import fm.liu.timo.manager.ManagerConnection;
+import fm.liu.timo.mysql.packet.OkPacket;
 import fm.liu.timo.net.connection.Variables;
-import fm.liu.timo.util.TimeUtil;
+import fm.liu.timo.server.session.handler.InitDDLHandler;
+import fm.liu.timo.util.messenger.Mail;
+import fm.liu.timo.util.messenger.Messenger;
 
 /**
  * @author Liu Huanting 2015年5月10日
  */
 public class TimoConfig {
-    private volatile SystemConfig             system;
-    private volatile Map<String, User>        users;
-    private volatile Map<String, Database>    databases;
-    private volatile Map<Integer, Node>       nodes;
-    private volatile Map<Integer, Datasource> datasources;
-    private ReentrantLock                     lock = new ReentrantLock();
-    private long                              lastReloadTime;
+    private volatile SystemConfig          system;
+    private volatile Map<String, User>     users;
+    private volatile Map<String, Database> databases;
+    private volatile Map<Integer, Node>    nodes;
+    private ReentrantLock                  lock = new ReentrantLock();
+    private Messenger                      reloader;
 
     public TimoConfig() {
         this.system = new SystemConfigLoader().getSystemConfig();
@@ -51,7 +56,6 @@ public class TimoConfig {
                 new ServerConfigLoader(system.getUrl(), system.getUsername(), system.getPassword());
         this.users = conf.getUsers();
         this.databases = conf.getDatabases();
-        this.datasources = conf.getDatasources();
         this.nodes = initDatanodes(conf.getDatanodes(), conf.getDatasources(), conf.getHandovers());
     }
 
@@ -86,98 +90,64 @@ public class TimoConfig {
         return nodes;
     }
 
-    private volatile SystemConfig             _system;
-    private volatile Map<String, User>        _users;
-    private volatile Map<String, Database>    _databases;
-    private volatile Map<Integer, Node>       _nodes;
-    private volatile Map<Integer, Datasource> _datasources;
-
-    /**
-     * reload @@config
-     */
-    public boolean reload() {
-        boolean success = false;
-        _system = this.system;
-        _users = this.users;
-        _databases = this.databases;
-        _datasources = this.datasources;
-        _nodes = this.nodes;
-        lock.lock();
-        try {
-            this.system = new SystemConfigLoader().getSystemConfig();
-            ServerConfigLoader conf = new ServerConfigLoader(system.getUrl(), system.getUsername(),
-                    system.getPassword());
-            this.users = conf.getUsers();
-            this.databases = conf.getDatabases();
-            this.datasources = conf.getDatasources();
-            this.nodes =
-                    initDatanodes(conf.getDatanodes(), conf.getDatasources(), conf.getHandovers());
-            for (Node node : nodes.values()) {
-                if (!node.init()) {
-                    throw new Exception(
-                            "node " + node.getID() + " init failed in config reloading.");
+    public void reload(ManagerConnection c) {
+        AtomicBoolean success = new AtomicBoolean(true);
+        SystemConfig _system = new SystemConfigLoader().getSystemConfig();
+        ServerConfigLoader _conf =
+                new ServerConfigLoader(system.getUrl(), system.getUsername(), system.getPassword());
+        Map<String, User> _users = _conf.getUsers();
+        Map<String, Database> _databases = _conf.getDatabases();
+        Map<Integer, Datasource> _datasources = _conf.getDatasources();
+        Map<Integer, Node> _nodes =
+                initDatanodes(_conf.getDatanodes(), _datasources, _conf.getHandovers());
+        _nodes.values().forEach(n -> {
+            if (!n.init()) {
+                success.set(false);
+            }
+        });
+        final AtomicInteger count = new AtomicInteger();
+        this.databases.values().forEach(db -> count.addAndGet(db.getTables().size()));
+        reloader = new Messenger() {
+            @Override
+            public void receive(Mail<?> mail) {
+                success.set(success.get() & ((Boolean) mail.msg).booleanValue());
+                if (count.decrementAndGet() == 0) {
+                    executeReload(success.get(), _system, _users, _databases, _nodes, c);
                 }
             }
-            if (this.system.isEnableXA()) {
-                databases.keySet().forEach(db -> {
-                    TimoServer.getXaStarting().put(db, new AtomicLong());
-                    TimoServer.getXaCommiting().put(db, new AtomicLong());
-                });
-            }
-            success = true;
-        } catch (Exception e) {
-            this.system = _system;
-            this.users = _users;
-            this.databases = _databases;
-            this.datasources = _datasources;
-            this.nodes = _nodes;
-            Logger.warn("reload config failed due to {}", e.getMessage());
-        } finally {
-            lock.unlock();
-        }
-        if (success) {
-            _nodes.values().parallelStream()
-                    .forEach(node -> node.clear("clear old node due to reload config"));
-            lastReloadTime = TimeUtil.currentTimeMillis();
-        }
-        return success;
+        };
+        reloader.register();
+        _databases.values()
+                .forEach(db -> db.getTables().values().forEach(
+                        t -> new InitDDLHandler(t, _nodes, system.isAutoIncrement(), null, "RELOAD")
+                                .execute()));
     }
 
-    /**
-     * rollback @@config
-     */
-    public boolean rollback() {
-        if (lastReloadTime == 0) {
-            return false;
-        }
-        Collection<Node> backNodes = this.nodes.values();
-        boolean success = false;
-        lock.lock();
-        try {
-            for (Node node : _nodes.values()) {
-                if (!node.init()) {
-                    throw new Exception(
-                            "node " + node.getID() + " init failed in config reloading.");
-                }
-            }
-            this.system = _system;
-            this.users = _users;
-            this.databases = _databases;
-            this.datasources = _datasources;
-            this.nodes = _nodes;
-            success = true;
-        } catch (Exception e) {
-            for (Node node : _nodes.values()) {
-                node.clear("clear back nodes due to rollback config failure");
-            }
-        } finally {
-            lock.unlock();
-        }
+    protected void executeReload(boolean success, SystemConfig _system, Map<String, User> _users,
+            Map<String, Database> _databases, Map<Integer, Node> _nodes, ManagerConnection c) {
         if (success) {
-            backNodes.parallelStream()
-                    .forEach(node -> node.clear("clear backnodes due to rollback config"));
+            lock.lock();
+            try {
+                this.system = _system;
+                this.users = _users;
+                this.databases = _databases;
+                this.nodes = _nodes;
+                if (this.system.isEnableXA()) {
+                    databases.keySet().forEach(db -> {
+                        TimoServer.getXaStarting().put(db, new AtomicLong());
+                        TimoServer.getXaCommiting().put(db, new AtomicLong());
+                    });
+                }
+            } finally {
+                lock.unlock();
+            }
+            c.write(OkPacket.OK);
+            Logger.info("reload config success by manager");
+        } else {
+            c.writeErrMessage(ErrorCode.ER_YES, "reload config failed");
+            Logger.info("reload config failed by manager");
+            _nodes.values().forEach(n -> n.getSources().forEach(s -> s.clear("reload failed")));
         }
-        return success;
     }
 
     public SystemConfig getSystem() {
@@ -200,8 +170,8 @@ public class TimoConfig {
         return lock;
     }
 
-    public Map<Integer, Datasource> getDatasources() {
-        return datasources;
+    public Messenger getReloader() {
+        return reloader;
     }
 
 }

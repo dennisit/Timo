@@ -51,18 +51,8 @@ public class QueueSimpleMain {
             @Override
             public void run() {
                 for (;;) {
-                    // try {
                     if (queue.poll() != null)
                         takeCount++;
-                    // } catch (InterruptedException e) {
-                    // e.printStackTrace();
-                    // }
-                    // try {
-                    // Thread.sleep(10L);
-                    // } catch (InterruptedException e) {
-                    // // TODO Auto-generated catch block
-                    // e.printStackTrace();
-                    // }
                 }
             }
         }.start();

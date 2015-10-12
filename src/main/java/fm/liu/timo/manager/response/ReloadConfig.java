@@ -13,12 +13,8 @@
  */
 package fm.liu.timo.manager.response;
 
-import java.util.concurrent.locks.ReentrantLock;
-import org.pmw.tinylog.Logger;
 import fm.liu.timo.TimoServer;
-import fm.liu.timo.config.ErrorCode;
 import fm.liu.timo.manager.ManagerConnection;
-import fm.liu.timo.mysql.packet.OkPacket;
 
 /**
  * @author xianmao.hexm
@@ -26,23 +22,7 @@ import fm.liu.timo.mysql.packet.OkPacket;
 public final class ReloadConfig {
 
     public static void execute(ManagerConnection c) {
-        final ReentrantLock lock = TimoServer.getInstance().getConfig().getLock();
-        lock.lock();
-        try {
-            if (TimoServer.getInstance().getConfig().reload()) {
-                Logger.info("Reload config success by manager");
-                OkPacket ok = new OkPacket();
-                ok.packetId = 1;
-                ok.affectedRows = 1;
-                ok.serverStatus = 2;
-                ok.message = "Reload config success".getBytes();
-                ok.write(c);
-            } else {
-                c.writeErrMessage(ErrorCode.ER_YES, "Reload config failure");
-            }
-        } finally {
-            lock.unlock();
-        }
+        TimoServer.getInstance().getConfig().reload(c);
     }
 
 }

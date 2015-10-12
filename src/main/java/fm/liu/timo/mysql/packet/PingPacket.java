@@ -33,15 +33,9 @@ public class PingPacket extends MySQLPacket {
     }
 
     @Override
-    protected void readBody(MySQLMessage mm) {
-        // TODO Auto-generated method stub
-
-    }
+    protected void readBody(MySQLMessage mm) {}
 
     @Override
-    protected void writeBody(ByteBuffer buffer) {
-        // TODO Auto-generated method stub
-
-    }
+    protected void writeBody(ByteBuffer buffer) {}
 
 }

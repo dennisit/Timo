@@ -34,7 +34,6 @@ public class Table {
     private final Rule                               rule;
     private final List<Integer>                      nodes;
     private AutoIncrement                            autoIncrement;
-    private int                                      keyIndex;
     private volatile DDLCreateTableStatement         ddl;
     private List<Pair<Identifier, ColumnDefinition>> columns;
 
@@ -84,16 +83,6 @@ public class Table {
         try {
             this.ddl = (DDLCreateTableStatement) SQLParserDelegate.parse(sql);
             this.columns = ddl.getColDefs();
-            if (this.type == TableType.SPLIT) {
-                int i = 0;
-                for (Pair<Identifier, ColumnDefinition> column : columns) {
-                    if (column.getKey().getIdTextUpUnescape().equals(rule.getColumn())) {
-                        this.keyIndex = i;
-                        break;
-                    }
-                    i++;
-                }
-            }
         } catch (SQLSyntaxErrorException e) {
             e.printStackTrace();
         }
