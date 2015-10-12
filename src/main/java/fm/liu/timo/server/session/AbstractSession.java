@@ -30,6 +30,7 @@ import fm.liu.timo.route.Outlet;
 import fm.liu.timo.route.Outlets;
 import fm.liu.timo.server.ServerConnection;
 import fm.liu.timo.server.parser.ServerParse;
+import fm.liu.timo.server.session.handler.ReInitDDLHandler;
 import fm.liu.timo.server.session.handler.SessionResultHandler;
 
 /**
@@ -98,8 +99,11 @@ public abstract class AbstractSession implements Session {
     }
 
     protected SessionResultHandler chooseHandler(Outlets outs, int type) {
+        if (type == ServerParse.DDL) {
+            return new ReInitDDLHandler(this, outs);
+        }
         int size = outs.size();
-        if (1 == size) {
+        if (size == 1) {
             return new SingleNodeHandler(this);
         }
         return new MultiNodeHandler(this, new Merger(outs), size);

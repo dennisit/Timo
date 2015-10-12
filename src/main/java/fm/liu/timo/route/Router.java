@@ -45,8 +45,8 @@ public class Router {
     private static final String NODE   = "node";
     private static final String MASTER = "master";
 
-    public static Outlets route(Database database, String sql, String charset, int type)
-            throws SQLSyntaxErrorException {
+    public static Outlets route(Database database, String sql, String charset, int type,
+            boolean isExplain) throws SQLSyntaxErrorException {
         Outlets outlets = new Outlets();
         sql = sql.trim();
         if (sql.startsWith(HINT)) {
@@ -75,13 +75,14 @@ public class Router {
         }
         sql = removeDB(sql, database.getName());
         SQLStatement stmt = SQLParserDelegate.parse(sql, charset);
-        RouteVisitor visitor = new RouteVisitor(database);
+        RouteVisitor visitor = new RouteVisitor(database, isExplain);
         stmt.accept(visitor);
         Table table = visitor.getTable();
         if (table == null) {
             outlets.add(new Outlet(database.getRandomNode(), sql));
             return outlets;
         }
+        outlets.setTable(table);
         ArrayList<Object> values = visitor.getValues();
         int info = visitor.getInfo();
         outlets.setInfo(info);

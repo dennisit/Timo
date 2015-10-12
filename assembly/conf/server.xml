@@ -14,5 +14,6 @@
         <property name="heartbeatTimeout">300</property> <!-- 心跳超时时间 （ms）-->
         <property name="queryTimeout">300</property> <!-- 查询超时时间（s） -->
         <property name="enableXA">false</property> <!-- 启用XA事务[true/false] -->
+        <property name="autoIncrement">true</property> <!-- 启用全局自增序列[true/false] -->
     </system>
 </timo:server>

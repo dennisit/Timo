@@ -45,7 +45,7 @@ public class XARecoverHandler extends SessionResultHandler {
                 error();
             }
             TimoServer.getSender()
-                    .send(new Mail<String>(TimoServer.getInstance().getStarter(), "start"));
+                    .send(new Mail<String>(TimoServer.getInstance().getStarter(), "XA"));
         }
     }
 
@@ -94,7 +94,7 @@ public class XARecoverHandler extends SessionResultHandler {
             } else {
                 if (this.recoverCount.get() == 0) {
                     TimoServer.getSender()
-                            .send(new Mail<String>(TimoServer.getInstance().getStarter(), "start"));
+                            .send(new Mail<String>(TimoServer.getInstance().getStarter(), "XA"));
                 } else {
                     XARecoverHandler handler = new XARecoverHandler(this.recoverCount.get());
                     for (String xid : dbResult.keySet()) {

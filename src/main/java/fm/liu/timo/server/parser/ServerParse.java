@@ -41,7 +41,7 @@ public final class ServerParse {
     public static final int MYSQL_COMMENT     = 19;
     public static final int CALL              = 20;
     public static final int DESC              = 21;
-    public static final int SEQUENCE_DDL      = 22;
+    public static final int DDL               = 22;
     public static final int LOCK              = 23;
     public static final int UNLOCK            = 24;
     public static final int PREPARE           = 25;
@@ -171,7 +171,7 @@ public final class ServerParse {
                             continue;
                         case 'T':
                         case 't':
-                            return SEQUENCE_DDL;
+                            return DDL;
                         case 'P':
                         case 'p':
                             // ALTER PROCEDURE
@@ -372,7 +372,7 @@ public final class ServerParse {
                             continue;
                         case 'T':
                         case 't':
-                            return SEQUENCE_DDL;
+                            return DDL;
                         case 'P':
                         case 'p':
                             // CREATE PROCEDURE

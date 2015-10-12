@@ -111,7 +111,7 @@ public class ExplainHandler {
         }
         try {
             int sqlType = ServerParse.parse(stmt) & 0xff;
-            return Router.route(database, stmt, c.getCharset(), sqlType);
+            return Router.route(database, stmt, c.getCharset(), sqlType, true);
         } catch (SQLNonTransientException e) {
             Logger.warn("SQL:'{}' from {} got exception:{}", stmt, c, e);
             String msg = e.getMessage();

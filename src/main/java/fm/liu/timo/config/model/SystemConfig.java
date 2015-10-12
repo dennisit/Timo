@@ -34,6 +34,7 @@ public class SystemConfig {
     private static final int     DEFAULT_QUERY_TIMEOUT              = 300;
     private static final int     DEFAULT_SQL_RECORD_COUNT           = 10;
     private static final boolean DEFAULT_ENABLE_XA                  = false;
+    private static final boolean DEFAUKT_AUTOINCREMENT              = false;
 
     private int     serverPort;
     private int     managerPort;
@@ -57,6 +58,7 @@ public class SystemConfig {
     private int     queryTimeout;
     private int     sqlRecordCount;
     private boolean enableXA;
+    private boolean autoIncrement;
 
     public SystemConfig() {
         this.serverPort = DEFAULT_PORT;
@@ -78,6 +80,7 @@ public class SystemConfig {
         this.queryTimeout = DEFAULT_QUERY_TIMEOUT;
         this.sqlRecordCount = DEFAULT_SQL_RECORD_COUNT;
         this.enableXA = DEFAULT_ENABLE_XA;
+        this.autoIncrement = DEFAUKT_AUTOINCREMENT;
     }
 
     public String getCharset() {
@@ -254,6 +257,14 @@ public class SystemConfig {
 
     public void setEnableXA(boolean enableXA) {
         this.enableXA = enableXA;
+    }
+
+    public boolean isAutoIncrement() {
+        return autoIncrement;
+    }
+
+    public void setAutoIncrement(boolean autoIncrement) {
+        this.autoIncrement = autoIncrement;
     }
 
 }

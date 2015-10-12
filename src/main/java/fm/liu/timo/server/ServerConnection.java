@@ -97,7 +97,7 @@ public class ServerConnection extends FrontendConnection {
         }
         Outlets out = null;
         try {
-            out = Router.route(database, sql, this.getCharset(), type);
+            out = Router.route(database, sql, this.getCharset(), type, false);
         } catch (SQLSyntaxErrorException e) {
             String msg = e.getMessage();
             writeErrMessage(ErrorCode.ER_PARSE_ERROR,

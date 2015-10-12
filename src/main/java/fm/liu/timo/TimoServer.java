@@ -25,6 +25,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.pmw.tinylog.Logger;
 import fm.liu.messenger.Mail;
@@ -42,6 +43,7 @@ import fm.liu.timo.net.NIOProcessor;
 import fm.liu.timo.net.connection.Variables;
 import fm.liu.timo.parser.recognizer.mysql.lexer.MySQLLexer;
 import fm.liu.timo.server.ServerConnectionFactory;
+import fm.liu.timo.server.session.handler.InitDDLHandler;
 import fm.liu.timo.server.session.handler.ResultHandler;
 import fm.liu.timo.statistic.SQLRecorder;
 import fm.liu.timo.util.ExecutorUtil;
@@ -152,30 +154,35 @@ public class TimoServer {
                 System.exit(-1);
             }
         }
-        if (config.getSystem().isEnableXA()) {
-            starter = new User() {
-                @Override
-                public void receive(Mail<?> mail) {
-                    try {
+        final AtomicInteger count = new AtomicInteger();
+        config.getDatabases().values().forEach(db -> count.addAndGet(db.getTables().size()));
+        starter = new User() {
+            @Override
+            public void receive(Mail<?> mail) {
+                switch ((String) mail.msg) {
+                    case "INIT":
+                        if (count.decrementAndGet() == 0) {
+                            if (system.isEnableXA()) {
+                                Logger.info("Checking XA transaction recover ...");
+                                xaRecover(nodes);
+                            } else {
+                                lisen(system);
+                            }
+                        }
+                        break;
+                    case "XA":
                         xaLogs.forEach(log -> log.delete());
-                        TimoServer.getInstance().lisen(system);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                        config.getDatabases().keySet().forEach(db -> {
+                            xaStarting.put(db, new AtomicLong());
+                            xaCommiting.put(db, new AtomicLong());
+                        });
                 }
-            };
-            starter.register();
-
-            // XA恢复
-            Logger.info("Checking XA transaction recover ...");
-            xaRecover(nodes);
-            config.getDatabases().keySet().forEach(db -> {
-                xaStarting.put(db, new AtomicLong());
-                xaCommiting.put(db, new AtomicLong());
-            });
-        } else {
-            lisen(system);
-        }
+            }
+        };
+        starter.register();
+        config.getDatabases().values()
+                .forEach(db -> db.getTables().values().forEach(t -> new InitDDLHandler(t,
+                        config.getNodes(), system.isAutoIncrement(), null, "INIT").execute()));
     }
 
     private void xaRecover(Map<Integer, Node> nodes) {
@@ -213,24 +220,27 @@ public class TimoServer {
         });
     }
 
-    private void lisen(SystemConfig system) throws IOException {
+    private void lisen(SystemConfig system) {
         // 初始化定时任务
         timer.schedule(updateTime(), 0L, TIME_UPDATE_PERIOD);
         timer.schedule(processorCheck(), 0L, system.getProcessorCheckPeriod());
         timer.schedule(dataNodeIdleCheck(), 0L, system.getDataNodeIdleCheckPeriod());
         timer.schedule(dataNodeHeartbeat(), 0L, system.getHeartbeatTimeout());
-
         // 初始化管理端和服务端
-        Variables variables = new Variables();
-        variables.setCharset(system.getCharset());
-        ManagerConnectionFactory mf = new ManagerConnectionFactory(variables);
-        manager = new NIOAcceptor(NAME + "Manager", system.getManagerPort(), mf);
-        manager.start();
-        Logger.info("{} is started and listening on {}", manager.getName(), manager.getPort());
-        ServerConnectionFactory sf = new ServerConnectionFactory(variables);
-        server = new NIOAcceptor(NAME + "Server", system.getServerPort(), sf);
-        server.start();
-
+        try {
+            Variables variables = new Variables();
+            variables.setCharset(system.getCharset());
+            ManagerConnectionFactory mf = new ManagerConnectionFactory(variables);
+            manager = new NIOAcceptor(NAME + "Manager", system.getManagerPort(), mf);
+            manager.start();
+            Logger.info("{} is started and listening on {}", manager.getName(), manager.getPort());
+            ServerConnectionFactory sf = new ServerConnectionFactory(variables);
+            server = new NIOAcceptor(NAME + "Server", system.getServerPort(), sf);
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
         // 启动完成
         Logger.info("{} is started and listening on {}", server.getName(), server.getPort());
         Logger.info("===============================================");

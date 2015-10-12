@@ -16,12 +16,14 @@ package fm.liu.timo.route;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import fm.liu.timo.config.model.Table;
 
 /**
  * @author Liu Huanting 2015年5月10日
  */
 public class Outlets {
     private Set<Outlet>          outlets;
+    private Table                table;
     private int                  info;
     private Set<String>          groupBy;
     private Map<String, Integer> orderBy;
@@ -92,5 +94,13 @@ public class Outlets {
 
     public boolean usingMaster() {
         return usingMaster;
+    }
+
+    public void setTable(Table table) {
+        this.table = table;
+    }
+
+    public Table getTable() {
+        return table;
     }
 }
