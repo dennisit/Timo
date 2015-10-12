@@ -86,6 +86,9 @@ public class Router {
         ArrayList<Object> values = visitor.getValues();
         int info = visitor.getInfo();
         outlets.setInfo(info);
+        if (type == ServerParse.DDL && !visitor.needReInitAutoIncrement()) {
+            outlets.setType(ServerParse.OTHER);
+        }
         switch (type) {
             case ServerParse.SELECT:
                 if (TableType.GLOBAL.equals(table.getType())) {

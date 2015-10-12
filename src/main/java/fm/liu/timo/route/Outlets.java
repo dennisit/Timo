@@ -30,6 +30,7 @@ public class Outlets {
     private int                  limitSize   = -1;
     private int                  limitOffset = 0;
     private boolean              usingMaster = false;
+    private int                  type;
 
     public Outlets() {
         this.outlets = new HashSet<Outlet>();
@@ -102,5 +103,13 @@ public class Outlets {
 
     public Table getTable() {
         return table;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public int getType() {
+        return type;
     }
 }
